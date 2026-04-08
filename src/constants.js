@@ -156,9 +156,9 @@ export const LEARNING_CONTENT = [
   { id: 5, title: "Soil Testing Made Simple",         type: "Article", emoji: "🔬" },
 ];
 
-// ── GEMINI AI CALL ──
-export const callGeminiAI = async (prompt) => {
-  const apiKey = "";
+// ── GROK AI CALL ──
+export const callGrokAI = async (prompt) => {
+  const apiKey = "xai-Fpq4iGI7ES7ecGAG8bbh5HMGfzQHsi3ZTJy7vzB7rnrXBDnxaa0Q03ah9L5s6uo7ugPF3N9Y6wYlnrHP";
   if (!apiKey) {
     return new Promise((resolve) =>
       setTimeout(
@@ -168,18 +168,40 @@ export const callGeminiAI = async (prompt) => {
     );
   }
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `Act as KrishiMitra. Keep answers very short. User asked: ${prompt}` }] }],
-        }),
+    const response = await fetch("https://api.x.ai/v1/responses", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
       },
-    );
+      body: JSON.stringify({
+        model: "grok-4.20-reasoning",
+        input: `Act as KrishiMitra. Keep answers very short. User asked: ${prompt}`
+      }),
+    });
+    
+    // Fallback if the user testing endpoint fails, try standard chat completions
+    if (!response.ok && response.status === 404) {
+      const res2 = await fetch("https://api.x.ai/v1/chat/completions", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "grok-beta",
+          messages: [
+            { role: "system", content: "You are KrishiMitra, an AI assistant for farmers. Keep answers very short." },
+            { role: "user", content: prompt }
+          ]
+        }),
+      });
+      const data2 = await res2.json();
+      return data2.choices?.[0]?.message?.content || "AI response received (Fallback)";
+    }
+
     const data = await response.json();
-    return data.candidates[0].content.parts[0].text;
+    return data.output || data.response || data.text || "AI response received";
   } catch {
     return "Network issue. Please try again.";
   }
