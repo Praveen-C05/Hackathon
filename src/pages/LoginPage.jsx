@@ -90,16 +90,24 @@ function OtpBox({ value, onChange }) {
 export default function LoginPage({ setUser, lang, setLang }) {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);       // 1=phone, 2=otp, 3=role
+  const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [role, setRole] = useState('farmer');
   const [loading, setLoading] = useState(false);
+  const [nameErr, setNameErr] = useState('');
   const [phoneErr, setPhoneErr] = useState('');
 
   const t = (key) => i18n[lang][key] || key;
 
   const handleSendOtp = (e) => {
     e.preventDefault();
+    if (name.trim().length < 2) {
+      setNameErr('Please enter your full name');
+      return;
+    }
+    setNameErr('');
+
     if (phone.replace(/\D/g, '').length < 10) {
       setPhoneErr('Please enter a valid 10-digit number');
       return;
@@ -124,7 +132,7 @@ export default function LoginPage({ setUser, lang, setLang }) {
   const handleSelectRole = (selectedRole) => {
     setLoading(true);
     setTimeout(() => {
-      setUser({ phone, role: selectedRole });
+      setUser({ name, phone, role: selectedRole });
       navigate('/app');
     }, 700);
   };
@@ -312,6 +320,45 @@ export default function LoginPage({ setUser, lang, setLang }) {
               </div>
 
               <form onSubmit={handleSendOtp}>
+                {/* Name input */}
+                <div style={{ marginBottom: '16px' }}>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Full Name"
+                    value={name}
+                    onChange={e => { setName(e.target.value); setNameErr(''); }}
+                    style={{
+                      width: '100%',
+                      padding: '16px 18px',
+                      background: 'rgba(255,255,255,0.06)',
+                      border: nameErr ? '2px solid #f87171' : '2px solid rgba(255,255,255,0.1)',
+                      borderRadius: '14px',
+                      color: 'white', fontSize: '17px',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600,
+                      outline: 'none',
+                      transition: 'all 0.2s ease',
+                      boxSizing: 'border-box',
+                    }}
+                    onFocus={e => {
+                      e.target.style.border = '2px solid #22c55e';
+                      e.target.style.background = 'rgba(34,197,94,0.05)';
+                      e.target.style.boxShadow = '0 0 0 4px rgba(34,197,94,0.12)';
+                    }}
+                    onBlur={e => {
+                      if (!nameErr) {
+                        e.target.style.border = '2px solid rgba(255,255,255,0.1)';
+                        e.target.style.background = 'rgba(255,255,255,0.06)';
+                        e.target.style.boxShadow = 'none';
+                      }
+                    }}
+                  />
+                </div>
+                {nameErr && (
+                  <p style={{ color: '#f87171', fontSize: '13px', marginBottom: '12px' }}>{nameErr}</p>
+                )}
+
                 {/* Phone input */}
                 <div style={{ position: 'relative', marginBottom: '16px' }}>
                   <div style={{
