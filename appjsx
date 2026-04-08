@@ -1,0 +1,809 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Home, ShoppingCart, Leaf, Truck, Tractor, 
+  MessageCircle, BookOpen, Settings, Mic, Send, 
+  LogOut, Sun, CloudRain, AlertTriangle, CheckCircle, 
+  ChevronRight, Languages, Phone, ShieldCheck, MapPin,
+  Camera, X, Image as ImageIcon
+} from 'lucide-react';
+
+// --- I18N DICTIONARY (Multilingual Support) ---
+const i18n = {
+  en: {
+    appTitle: "KrishiMitra",
+    login_title: "Secure Login",
+    login_sub: "Enter your mobile number",
+    send_otp: "Send OTP",
+    verify_otp: "Verify OTP",
+    mock_otp_msg: "Mock OTP is 1234",
+    role_farmer: "I am a Farmer",
+    role_buyer: "I am a Buyer",
+    nav_home: "Home",
+    nav_market: "Market",
+    nav_orders: "Orders",
+    nav_equip: "Rentals",
+    nav_ask: "Ask AI",
+    nav_learn: "Learn",
+    weather_alert: "Today's weather is 24°C with a 70% chance of heavy rain tomorrow. Please delay your harvesting.",
+    price_high: "Tomato prices are HIGH today! Good time to sell.",
+    market_browse: "Browse Crops",
+    market_sell: "Sell Your Crop",
+    crop_name: "Crop Name",
+    qty: "Quantity (kg)",
+    price: "Price per kg (₹)",
+    list_crop: "Verify & List Crop",
+    buy_now: "Buy Now",
+    escrow_msg: "Payment held securely until delivery",
+    status_ordered: "Ordered",
+    status_delivered: "Delivered",
+    confirm_delivery: "Confirm Delivery",
+    ask_krishi: "Krishi Voice Assistant",
+    voice_hint: "Tap microphone to speak your command...",
+    learning_hub: "Learning Hub",
+    equip_rent: "Rent Equipment",
+    equip_list: "List Equipment",
+    book_now: "Book Now",
+    take_photo: "Take Real-time Photo",
+    retake_photo: "Retake Photo",
+    photo_required: "Real-time photo verification required",
+    loading: "Processing...",
+    bot_sell_action: "Opening camera to verify and sell your crop.",
+    bot_rent_action: "Taking you to the equipment rentals.",
+    bot_scheme_action: "Opening the learning hub for government schemes."
+  },
+  hi: {
+    appTitle: "कृषिमित्र",
+    login_title: "सुरक्षित लॉगिन",
+    login_sub: "अपना मोबाइल नंबर दर्ज करें",
+    send_otp: "OTP भेजें",
+    verify_otp: "OTP सत्यापित करें",
+    mock_otp_msg: "मॉक OTP 1234 है",
+    role_farmer: "मैं किसान हूँ",
+    role_buyer: "मैं खरीदार हूँ",
+    nav_home: "होम",
+    nav_market: "बाज़ार",
+    nav_orders: "ऑर्डर",
+    nav_equip: "किराया",
+    nav_ask: "वॉयस असिस्टेंट",
+    nav_learn: "सीखें",
+    weather_alert: "आज मौसम 24°C है। कल भारी बारिश की संभावना है। कटाई रोकें।",
+    price_high: "टमाटर के दाम आज अधिक हैं! बेचने का सही समय।",
+    market_browse: "फसलें देखें",
+    market_sell: "फसल बेचें",
+    crop_name: "फसल का नाम",
+    qty: "मात्रा (किलो)",
+    price: "मूल्य प्रति किलो (₹)",
+    list_crop: "सत्यापित करें और सूचीबद्ध करें",
+    buy_now: "अभी खरीदें",
+    escrow_msg: "डिलीवरी तक भुगतान सुरक्षित है",
+    status_ordered: "ऑर्डर किया गया",
+    status_delivered: "पहुंचा दिया गया",
+    confirm_delivery: "डिलीवरी की पुष्टि करें",
+    ask_krishi: "कृषि वॉयस असिस्टेंट",
+    voice_hint: "बोलकर आदेश देने के लिए माइक दबाएं...",
+    learning_hub: "ज्ञान केंद्र",
+    equip_rent: "उपकरण किराए पर लें",
+    equip_list: "उपकरण सूचीबद्ध करें",
+    book_now: "बुक करें",
+    take_photo: "रीयल-टाइम फोटो लें",
+    retake_photo: "फिर से फोटो लें",
+    photo_required: "रीयल-टाइम फोटो सत्यापन आवश्यक है",
+    loading: "प्रसंस्करण...",
+    bot_sell_action: "आपकी फसल को सत्यापित करने और बेचने के लिए कैमरा खोल रहा हूँ।",
+    bot_rent_action: "आपको उपकरण किराये के पृष्ठ पर ले जा रहा हूँ।",
+    bot_scheme_action: "सरकारी योजनाओं के लिए ज्ञान केंद्र खोल रहा हूँ।"
+  },
+  kn: {
+    appTitle: "ಕೃಷಿಮಿತ್ರ",
+    login_title: "ಸುರಕ್ಷಿತ ಲಾಗಿನ್",
+    login_sub: "ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ",
+    send_otp: "OTP ಕಳುಹಿಸಿ",
+    verify_otp: "OTP ಪರಿಶೀಲಿಸಿ",
+    mock_otp_msg: "ಅಣಕು OTP 1234 ಆಗಿದೆ",
+    role_farmer: "ನಾನು ರೈತ",
+    role_buyer: "ನಾನು ಖರೀದಿದಾರ",
+    nav_home: "ಮುಖಪುಟ",
+    nav_market: "ಮಾರುಕಟ್ಟೆ",
+    nav_orders: "ಆದೇಶಗಳು",
+    nav_equip: "ಬಾಡಿಗೆ",
+    nav_ask: "ಧ್ವನಿ ಸಹಾಯಕ",
+    nav_learn: "ಕಲಿಯಿರಿ",
+    weather_alert: "ಇಂದು 24°C ಇದೆ. ನಾಳೆ ಭಾರಿ ಮಳೆಯ ನಿರೀಕ್ಷೆ. ಸುಗ್ಗಿಯನ್ನು ವಿಳಂಬಗೊಳಿಸಿ.",
+    price_high: "ಟೊಮೆಟೊ ಬೆಲೆ ಇಂದು ಹೆಚ್ಚಾಗಿದೆ! ಮಾರಾಟ ಮಾಡಲು ಒಳ್ಳೆಯ ಸಮಯ.",
+    market_browse: "ಬೆಳೆಗಳನ್ನು ಬ್ರೌಸ್ ಮಾಡಿ",
+    market_sell: "ಬೆಳೆ ಮಾರಾಟ ಮಾಡಿ",
+    crop_name: "ಬೆಳೆಯ ಹೆಸರು",
+    qty: "ಪ್ರಮಾಣ (ಕೆಜಿ)",
+    price: "ಕೆಜಿಗೆ ಬೆಲೆ (₹)",
+    list_crop: "ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಪಟ್ಟಿ ಮಾಡಿ",
+    buy_now: "ಈಗ ಖರೀದಿಸಿ",
+    escrow_msg: "ವಿತರಣೆಯಾಗುವವರೆಗೆ ಹಣ ಸುರಕ್ಷಿತವಾಗಿರುತ್ತದೆ",
+    status_ordered: "ಆದೇಶಿಸಲಾಗಿದೆ",
+    status_delivered: "ವಿತರಿಸಲಾಗಿದೆ",
+    confirm_delivery: "ವಿತರಣೆಯನ್ನು ಖಚಿತಪಡಿಸಿ",
+    ask_krishi: "ಕೃಷಿ ಧ್ವನಿ ಸಹಾಯಕ",
+    voice_hint: "ಮಾತನಾಡಲು ಮೈಕ್ ಒತ್ತಿರಿ...",
+    learning_hub: "ಕಲಿಕಾ ಕೇಂದ್ರ",
+    equip_rent: "ಉಪಕರಣಗಳನ್ನು ಬಾಡಿಗೆಗೆ ಪಡೆಯಿರಿ",
+    equip_list: "ಉಪಕರಣ ಪಟ್ಟಿ ಮಾಡಿ",
+    book_now: "ಬುಕ್ ಮಾಡಿ",
+    take_photo: "ನೈಜ-ಸಮಯದ ಫೋಟೋ ತೆಗೆದುಕೊಳ್ಳಿ",
+    retake_photo: "ಮತ್ತೆ ಫೋಟೋ ತೆಗೆದುಕೊಳ್ಳಿ",
+    photo_required: "ನೈಜ-ಸಮಯದ ಫೋಟೋ ಪರಿಶೀಲನೆ ಅಗತ್ಯವಿದೆ",
+    loading: "ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಲಾಗುತ್ತಿದೆ...",
+    bot_sell_action: "ಬೆಳೆಯನ್ನು ಪರಿಶೀಲಿಸಲು ಮತ್ತು ಮಾರಾಟ ಮಾಡಲು ಕ್ಯಾಮೆರಾ ತೆರೆಯಲಾಗುತ್ತಿದೆ.",
+    bot_rent_action: "ಉಪಕರಣಗಳ ಬಾಡಿಗೆ ಪುಟಕ್ಕೆ ಕರೆದೊಯ್ಯಲಾಗುತ್ತಿದೆ.",
+    bot_scheme_action: "ಸರ್ಕಾರಿ ಯೋಜನೆಗಳಿಗಾಗಿ ಕಲಿಕಾ ಕೇಂದ್ರವನ್ನು ತೆರೆಯಲಾಗುತ್ತಿದೆ."
+  }
+};
+
+// --- MOCK DATABASE ---
+const INITIAL_CROPS = [
+  { id: 1, name: "Tomatoes", qty: 500, price: 40, farmer: "Ramesh H.", img: "🍅", verified: true },
+  { id: 2, name: "Potatoes", qty: 1000, price: 25, farmer: "Suresh K.", img: "🥔", verified: true },
+];
+
+const INITIAL_EQUIPMENT = [
+  { id: 1, name: "Mahindra Tractor", type: "Tractor", rate: 500, per: "Hour", owner: "Villager Co-op", img: "🚜", verified: true },
+  { id: 2, name: "Water Pump (5HP)", type: "Pump", rate: 200, per: "Day", owner: "Ramesh H.", img: "💦", verified: true },
+];
+
+const LEARNING_CONTENT = [
+  { id: 1, title: "PM Kisan Samman Nidhi Details", type: "Scheme", icon: <ShieldCheck className="text-blue-600" /> },
+  { id: 2, title: "Pradhan Mantri Fasal Bima Yojana", type: "Scheme", icon: <ShieldCheck className="text-blue-600" /> },
+  { id: 3, title: "Organic Fertilizer Guide", type: "Article", icon: <Leaf className="text-green-600" /> }
+];
+
+// --- MAIN APP COMPONENT ---
+export default function KrishiMitraApp() {
+  const [lang, setLang] = useState('en');
+  const [user, setUser] = useState(null); 
+  const [currentPage, setCurrentPage] = useState('login');
+  
+  // App Data State
+  const [crops, setCrops] = useState(INITIAL_CROPS);
+  const [orders, setOrders] = useState([]);
+  const [equipment, setEquipment] = useState(INITIAL_EQUIPMENT);
+  
+  // Shared Navigation State for Bot Routing
+  const [marketTab, setMarketTab] = useState('browse');
+  const [equipTab, setEquipTab] = useState('rent');
+
+  const t = (key) => i18n[lang][key] || key;
+
+  // AI Helper API
+  const callGeminiAI = async (prompt) => {
+    const apiKey = ""; // Set environment API key here if needed
+    if (!apiKey) {
+      return new Promise(resolve => setTimeout(() => resolve("This is a simulated AI response. Neem oil is great for pests! 🌱"), 1000));
+    }
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: `Act as KrishiMitra. Keep answers very short. User asked: ${prompt}` }] }] })
+      });
+      const data = await response.json();
+      return data.candidates[0].content.parts[0].text;
+    } catch (e) {
+      return "Network issue. Please try again.";
+    }
+  };
+
+  const renderPage = () => {
+    if (!user) return <LoginScreen t={t} setUser={setUser} setPage={setCurrentPage} lang={lang} setLang={setLang} />;
+    
+    switch (currentPage) {
+      case 'home': return <Dashboard t={t} role={user.role} />;
+      case 'market': return <Marketplace t={t} crops={crops} setCrops={setCrops} role={user.role} addOrder={(o) => setOrders([o, ...orders])} setPage={setCurrentPage} tab={marketTab} setTab={setMarketTab} />;
+      case 'orders': return <Orders t={t} orders={orders} setOrders={setOrders} role={user.role} />;
+      case 'equip': return <Equipment t={t} equipment={equipment} setEquipment={setEquipment} tab={equipTab} setTab={setEquipTab} />;
+      case 'ask': return <ActionBot t={t} lang={lang} callAI={callGeminiAI} setPage={setCurrentPage} setMarketTab={setMarketTab} setEquipTab={setEquipTab} />;
+      case 'learn': return <LearningHub t={t} />;
+      default: return <Dashboard t={t} role={user.role} />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans pb-20 md:pb-0 md:flex">
+      {/* Desktop Sidebar */}
+      {user && (
+        <aside className="hidden md:flex flex-col w-64 bg-green-800 text-white min-h-screen sticky top-0">
+          <div className="p-4 text-2xl font-bold border-b border-green-700 flex items-center gap-2">
+            <Leaf /> {t('appTitle')}
+          </div>
+          <nav className="flex-1 p-4 space-y-2">
+            <SidebarItem icon={<Home/>} label={t('nav_home')} active={currentPage==='home'} onClick={()=>setCurrentPage('home')}/>
+            <SidebarItem icon={<ShoppingCart/>} label={t('nav_market')} active={currentPage==='market'} onClick={()=>setCurrentPage('market')}/>
+            <SidebarItem icon={<Truck/>} label={t('nav_orders')} active={currentPage==='orders'} onClick={()=>setCurrentPage('orders')}/>
+            <SidebarItem icon={<Tractor/>} label={t('nav_equip')} active={currentPage==='equip'} onClick={()=>setCurrentPage('equip')}/>
+            <SidebarItem icon={<MessageCircle/>} label={t('nav_ask')} active={currentPage==='ask'} onClick={()=>setCurrentPage('ask')}/>
+            <SidebarItem icon={<BookOpen/>} label={t('nav_learn')} active={currentPage==='learn'} onClick={()=>setCurrentPage('learn')}/>
+          </nav>
+        </aside>
+      )}
+
+      {/* Main Content Area */}
+      <main className="flex-1 w-full relative">
+        {user && (
+          <header className="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-10">
+            <div className="md:hidden font-bold text-green-700 flex items-center gap-2">
+              <Leaf size={24} /> {t('appTitle')}
+            </div>
+            <div className="hidden md:block font-semibold text-gray-600">Welcome, {user.phone} ({user.role})</div>
+            <div className="flex items-center gap-4">
+              <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-gray-100 border-none text-sm rounded-lg p-2 focus:ring-green-500 cursor-pointer">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+                <option value="kn">ಕನ್ನಡ</option>
+              </select>
+              <div className="w-8 h-8 bg-green-100 text-green-700 rounded-full flex items-center justify-center font-bold">
+                {user.role === 'farmer' ? 'F' : 'B'}
+              </div>
+            </div>
+          </header>
+        )}
+
+        <div className="p-4 pb-24 md:p-8 max-w-4xl mx-auto">
+          {renderPage()}
+        </div>
+      </main>
+
+      {/* Mobile Bottom Navigation */}
+      {user && (
+        <nav className="md:hidden fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around p-2 z-50">
+          <NavItem icon={<Home/>} label={t('nav_home')} active={currentPage==='home'} onClick={()=>setCurrentPage('home')} />
+          <NavItem icon={<ShoppingCart/>} label={t('nav_market')} active={currentPage==='market'} onClick={()=>setCurrentPage('market')} />
+          <NavItem icon={<Truck/>} label={t('nav_orders')} active={currentPage==='orders'} onClick={()=>setCurrentPage('orders')} />
+          <NavItem icon={<Tractor/>} label={t('nav_equip')} active={currentPage==='equip'} onClick={()=>setCurrentPage('equip')} />
+          {/* Prominent Bot Button */}
+          <button 
+            onClick={()=>setCurrentPage('ask')}
+            className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-green-600 text-white p-4 rounded-full shadow-lg shadow-green-300 border-4 border-white animate-bounce"
+          >
+            <Mic size={24} />
+          </button>
+        </nav>
+      )}
+    </div>
+  );
+}
+
+// --- CORE REUSABLE COMPONENTS ---
+
+// 1. WebRTC Camera Component for Real-time Verification
+function CameraCapture({ onCapture, t }) {
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [stream, setStream] = useState(null);
+  const [error, setError] = useState(false);
+  const [image, setImage] = useState(null);
+
+  useEffect(() => {
+    startCamera();
+    return stopCamera;
+  }, []);
+
+  const startCamera = async () => {
+    setError(false);
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      setStream(s);
+      if(videoRef.current) videoRef.current.srcObject = s;
+    } catch (err) {
+      console.warn("Camera access denied or unavailable", err);
+      setError(true);
+    }
+  };
+
+  const stopCamera = () => {
+    if(stream) {
+      stream.getTracks().forEach(t => t.stop());
+      setStream(null);
+    }
+  };
+
+  const handleCapture = () => {
+    if(error) {
+      // Fallback for mock environment without camera permissions
+      setImage("https://via.placeholder.com/300x200?text=Mock+Verified+Photo");
+      onCapture("mock_image_data");
+      return;
+    }
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const dataUrl = canvas.toDataURL('image/jpeg');
+    setImage(dataUrl);
+    onCapture(dataUrl);
+    stopCamera();
+  };
+
+  const handleRetake = () => {
+    setImage(null);
+    onCapture(null);
+    startCamera();
+  };
+
+  if (image) {
+    return (
+      <div className="relative rounded-xl overflow-hidden border-2 border-green-500 shadow-sm">
+        <img src={image} alt="Captured" className="w-full h-48 object-cover" />
+        <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 font-bold">
+          <CheckCircle size={12} /> Verified
+        </div>
+        <button type="button" onClick={handleRetake} className="absolute bottom-2 right-2 bg-gray-900/70 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-2">
+          <Camera size={14} /> {t('retake_photo')}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative rounded-xl overflow-hidden bg-black flex flex-col items-center justify-center h-48">
+      {error ? (
+        <div className="text-gray-400 text-center p-4">
+          <ImageIcon className="mx-auto mb-2 opacity-50" size={32}/>
+          <p className="text-sm">Camera unavailable. Click capture for mock photo.</p>
+        </div>
+      ) : (
+        <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover opacity-80" />
+      )}
+      <button type="button" onClick={handleCapture} className="absolute bottom-4 bg-white text-gray-900 px-4 py-2 rounded-full font-bold shadow-lg flex items-center gap-2">
+        <Camera size={18} /> {t('take_photo')}
+      </button>
+      <canvas ref={canvasRef} className="hidden" />
+    </div>
+  );
+}
+
+// --- FEATURE PAGES ---
+
+// Action Agent Bot (The Core App Driver)
+function ActionBot({ t, lang, callAI, setPage, setMarketTab, setEquipTab }) {
+  const [messages, setMessages] = useState([
+    { id: 1, text: `Namaste! I am ${t('appTitle')} Agent. You can ask me for the weather, or tell me to sell your crop, or find schemes!`, sender: "bot" }
+  ]);
+  const [input, setInput] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
+
+  const speak = (text) => {
+    if ('speechSynthesis' in window) {
+       const utterance = new SpeechSynthesisUtterance(text);
+       utterance.lang = lang === 'hi' ? 'hi-IN' : lang === 'kn' ? 'kn-IN' : 'en-IN';
+       window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const processIntentAndExecute = async (text) => {
+    const lower = text.toLowerCase();
+    let reply = "";
+
+    if (lower.includes('weather') || lower.includes('mausam') || lower.includes('hawaamaan')) {
+      reply = t('weather_alert');
+      setMessages(prev => [...prev, { id: Date.now(), text: reply, sender: "bot", widget: 'weather' }]);
+      speak(reply);
+    } 
+    else if (lower.includes('sell') || lower.includes('bechna') || lower.includes('mārāṭa') || lower.includes('bech')) {
+      reply = t('bot_sell_action');
+      setMessages(prev => [...prev, { id: Date.now(), text: reply, sender: "bot" }]);
+      speak(reply);
+      setTimeout(() => { setPage('market'); setMarketTab('sell'); }, 2000);
+    } 
+    else if (lower.includes('rent') || lower.includes('tractor') || lower.includes('kirāya') || lower.includes('bāḍige')) {
+      reply = t('bot_rent_action');
+      setMessages(prev => [...prev, { id: Date.now(), text: reply, sender: "bot" }]);
+      speak(reply);
+      setTimeout(() => { setPage('equip'); }, 2000);
+    } 
+    else if (lower.includes('scheme') || lower.includes('yojana') || lower.includes('yōjane')) {
+      reply = t('bot_scheme_action');
+      setMessages(prev => [...prev, { id: Date.now(), text: reply, sender: "bot" }]);
+      speak(reply);
+      setTimeout(() => { setPage('learn'); }, 2000);
+    } 
+    else {
+      setIsLoading(true);
+      reply = await callAI(text);
+      setIsLoading(false);
+      setMessages(prev => [...prev, { id: Date.now(), text: reply, sender: "bot" }]);
+      speak(reply);
+    }
+  };
+
+  const handleSend = async (text) => {
+    if(!text.trim()) return;
+    setMessages(prev => [...prev, { id: Date.now(), text, sender: "user" }]);
+    setInput("");
+    await processIntentAndExecute(text);
+  };
+
+  const toggleVoice = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert("Voice recognition not supported in this browser.");
+      return;
+    }
+    if(isListening) return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang === 'hi' ? 'hi-IN' : lang === 'kn' ? 'kn-IN' : 'en-IN';
+    
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+      handleSend(transcript);
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+    recognition.start();
+  };
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] -mt-4 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-green-700 text-white p-5 shadow-md flex items-center gap-4 z-10">
+        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-3xl shadow-inner relative">
+           🤖
+           {isListening && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-ping"></span>}
+        </div>
+        <div>
+          <h2 className="font-bold text-xl">{t('ask_krishi')}</h2>
+          <p className="text-sm text-green-200">Your Personal Action Agent</p>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-gray-50">
+        {messages.map(msg => (
+          <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[85%] flex flex-col gap-2 ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
+              <div className={`p-4 rounded-2xl text-lg ${msg.sender === 'user' ? 'bg-green-600 text-white rounded-tr-none shadow-md' : 'bg-white text-gray-800 rounded-tl-none border border-gray-200 shadow-sm'}`}>
+                {msg.text}
+              </div>
+              {/* Dynamic Widgets Rendered by Bot */}
+              {msg.widget === 'weather' && (
+                <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center gap-3 shadow-sm w-full">
+                  <Sun className="w-10 h-10 text-yellow-500" />
+                  <div>
+                    <p className="font-bold text-blue-900">Current: 24°C</p>
+                    <p className="text-sm text-blue-700">Expect rain tomorrow.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-gray-200 shadow-sm flex gap-2 items-center">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce delay-100"></div>
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce delay-200"></div>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="p-4 bg-white border-t border-gray-200">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={toggleVoice} 
+            className={`p-4 rounded-full flex-shrink-0 transition-all shadow-md ${isListening ? 'bg-red-500 text-white scale-110' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+          >
+            <Mic size={24} />
+          </button>
+          <input 
+            type="text" 
+            value={input}
+            onChange={e=>setInput(e.target.value)}
+            onKeyPress={e => e.key === 'Enter' && handleSend(input)}
+            placeholder={isListening ? "Listening..." : t('voice_hint')}
+            className="flex-1 p-4 bg-gray-100 border border-transparent rounded-2xl text-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+          />
+          <button onClick={()=>handleSend(input)} className="p-4 bg-green-600 text-white rounded-2xl flex-shrink-0 hover:bg-green-700 shadow-md">
+            <Send size={24} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 3. Marketplace (D2C with Verification)
+function Marketplace({ t, crops, setCrops, role, addOrder, setPage, tab, setTab }) {
+  const [newCrop, setNewCrop] = useState({ name: '', qty: '', price: '' });
+  const [photoData, setPhotoData] = useState(null);
+  const [processingId, setProcessingId] = useState(null);
+
+  const handleSell = (e) => {
+    e.preventDefault();
+    if(!photoData) return alert(t('photo_required'));
+
+    const crop = {
+      id: Date.now(),
+      name: newCrop.name,
+      qty: Number(newCrop.qty),
+      price: Number(newCrop.price),
+      farmer: "You",
+      img: "🌾", 
+      photoUrl: photoData,
+      verified: true
+    };
+    setCrops([crop, ...crops]);
+    setNewCrop({ name: '', qty: '', price: '' });
+    setPhotoData(null);
+    setTab('browse');
+  };
+
+  const handleBuy = (crop) => {
+    setProcessingId(crop.id);
+    setTimeout(() => {
+      addOrder({ id: "ORD" + Math.floor(Math.random()*10000), cropName: crop.name, qty: 100, total: 100 * crop.price, status: 'ordered', date: new Date().toLocaleDateString() });
+      setProcessingId(null);
+      setPage('orders');
+    }, 1500);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100">
+        <button onClick={()=>setTab('browse')} className={`flex-1 py-3 text-sm font-bold rounded-lg ${tab==='browse'?'bg-green-600 text-white shadow-md':'text-gray-500 hover:bg-gray-50'}`}>{t('market_browse')}</button>
+        {role === 'farmer' && (
+          <button onClick={()=>setTab('sell')} className={`flex-1 py-3 text-sm font-bold rounded-lg ${tab==='sell'?'bg-green-600 text-white shadow-md':'text-gray-500 hover:bg-gray-50'}`}>{t('market_sell')}</button>
+        )}
+      </div>
+
+      {tab === 'browse' ? (
+        <div className="grid gap-4">
+          {crops.map(crop => (
+            <div key={crop.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex gap-4 items-center">
+              {crop.photoUrl ? (
+                 <img src={crop.photoUrl} alt="crop" className="w-20 h-20 object-cover rounded-xl border border-gray-200" />
+              ) : (
+                 <div className="text-5xl bg-gray-50 p-2 rounded-xl w-20 h-20 flex items-center justify-center border border-gray-100">{crop.img}</div>
+              )}
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-lg text-gray-800">{crop.name}</h3>
+                  {crop.verified && <ShieldCheck size={16} className="text-green-500" />}
+                </div>
+                <p className="text-sm text-gray-500 flex items-center gap-1"><MapPin size={12}/> {crop.farmer}</p>
+                <div className="mt-2 flex gap-3 text-sm font-medium">
+                  <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md">{crop.qty} kg avail.</span>
+                  <span className="bg-green-50 text-green-700 px-2 py-1 rounded-md">₹{crop.price}/kg</span>
+                </div>
+              </div>
+              {role === 'buyer' && (
+                <button 
+                  onClick={() => handleBuy(crop)} disabled={processingId === crop.id}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl font-bold shadow-md disabled:bg-gray-400"
+                >
+                  {processingId === crop.id ? '...' : t('buy_now')}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <form onSubmit={handleSell} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-5">
+          <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 mb-4">
+             <p className="text-sm text-orange-800 font-medium flex items-center gap-2">
+               <Camera size={16}/> {t('photo_required')}
+             </p>
+          </div>
+          
+          <CameraCapture onCapture={setPhotoData} t={t} />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('crop_name')}</label>
+            <input required type="text" value={newCrop.name} onChange={e=>setNewCrop({...newCrop, name: e.target.value})} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none" />
+          </div>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('qty')}</label>
+              <input required type="number" value={newCrop.qty} onChange={e=>setNewCrop({...newCrop, qty: e.target.value})} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none" />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('price')}</label>
+              <input required type="number" value={newCrop.price} onChange={e=>setNewCrop({...newCrop, price: e.target.value})} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none" />
+            </div>
+          </div>
+          <button type="submit" disabled={!photoData} className={`w-full py-4 rounded-xl font-bold text-lg shadow-md mt-4 flex items-center justify-center gap-2 ${photoData ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
+            <ShieldCheck size={20} /> {t('list_crop')}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+// 5. Equipment Rental (With Listing & Verification)
+function Equipment({ t, equipment, setEquipment, tab, setTab }) {
+  const [newEquip, setNewEquip] = useState({ name: '', rate: '', per: 'Day' });
+  const [photoData, setPhotoData] = useState(null);
+
+  const handleList = (e) => {
+    e.preventDefault();
+    if(!photoData) return alert(t('photo_required'));
+    const item = {
+      id: Date.now(), name: newEquip.name, type: "Tool", rate: Number(newEquip.rate), per: newEquip.per, owner: "You", img: "🔧", photoUrl: photoData, verified: true
+    };
+    setEquipment([item, ...equipment]);
+    setNewEquip({ name: '', rate: '', per: 'Day' });
+    setPhotoData(null);
+    setTab('rent');
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2"><Tractor className="text-green-600"/> {t('equip_rent')}</h2>
+        <button onClick={()=>setTab(tab === 'rent' ? 'list' : 'rent')} className="text-green-700 font-bold text-sm bg-green-50 px-4 py-2 rounded-xl border border-green-200 hover:bg-green-100 transition-colors">
+          {tab === 'rent' ? `+ ${t('equip_list')}` : 'Back to Rentals'}
+        </button>
+      </div>
+
+      {tab === 'rent' ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {equipment.map(item => (
+            <div key={item.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+              <div className="flex gap-4">
+                {item.photoUrl ? (
+                   <img src={item.photoUrl} alt="equipment" className="w-24 h-24 object-cover rounded-xl border border-gray-200" />
+                ) : (
+                   <div className="text-5xl bg-orange-50 p-3 rounded-xl w-24 h-24 flex items-center justify-center">{item.img}</div>
+                )}
+                <div>
+                   <div className="flex items-center gap-2">
+                     <h3 className="font-bold text-lg text-gray-800">{item.name}</h3>
+                     {item.verified && <ShieldCheck size={16} className="text-green-500" />}
+                   </div>
+                   <p className="text-sm text-gray-500 flex items-center gap-1 mt-1"><MapPin size={12}/> {item.owner}</p>
+                   <p className="font-bold text-orange-600 text-lg mt-2">₹{item.rate} / {item.per}</p>
+                </div>
+              </div>
+              <button className="mt-4 w-full bg-gray-900 hover:bg-black text-white py-3 rounded-xl font-bold text-sm shadow-md transition-colors">{t('book_now')}</button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <form onSubmit={handleList} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-5">
+           <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 mb-4">
+             <p className="text-sm text-orange-800 font-medium flex items-center gap-2">
+               <Camera size={16}/> {t('photo_required')} for quality check.
+             </p>
+          </div>
+          
+          <CameraCapture onCapture={setPhotoData} t={t} />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Equipment Name</label>
+            <input required type="text" value={newEquip.name} onChange={e=>setNewEquip({...newEquip, name: e.target.value})} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500" />
+          </div>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Rate (₹)</label>
+              <input required type="number" value={newEquip.rate} onChange={e=>setNewEquip({...newEquip, rate: e.target.value})} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500" />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Per</label>
+              <select value={newEquip.per} onChange={e=>setNewEquip({...newEquip, per: e.target.value})} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500">
+                <option>Hour</option><option>Day</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" disabled={!photoData} className={`w-full py-4 rounded-xl font-bold text-lg shadow-md flex items-center justify-center gap-2 ${photoData ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
+             <ShieldCheck size={20} /> Verify & List Equipment
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+// ... Remaining simple components (LoginScreen, Dashboard, Orders, LearningHub, SidebarItem, NavItem) remain same structurally but use updated strings
+function LoginScreen({ t, setUser, setPage, lang, setLang }) {
+  const [phone, setPhone] = useState('');
+  const [step, setStep] = useState(1);
+  const [otp, setOtp] = useState('');
+  const [role, setRole] = useState('farmer');
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[80vh]">
+      <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+        <div className="flex justify-center mb-6"><div className="bg-green-100 p-4 rounded-full"><Leaf className="w-12 h-12 text-green-600" /></div></div>
+        <h1 className="text-3xl font-black text-center text-green-800 tracking-tight mb-2">{t('appTitle')}</h1>
+        <p className="text-center text-gray-500 mb-6">{t('login_title')}</p>
+
+        <div className="flex justify-center gap-2 mb-8">
+          {['en', 'hi', 'kn'].map(l => (
+            <button key={l} onClick={()=>setLang(l)} className={`px-4 py-1 rounded-full text-sm font-medium ${lang === l ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
+              {l === 'en' ? 'English' : l === 'hi' ? 'हिंदी' : 'ಕನ್ನಡ'}
+            </button>
+          ))}
+        </div>
+
+        {step === 1 ? (
+          <form onSubmit={e => { e.preventDefault(); if(phone.length >= 10) setStep(2); }} className="space-y-4">
+            <div className="flex gap-2">
+              <button type="button" onClick={()=>setRole('farmer')} className={`flex-1 py-3 rounded-xl border-2 font-bold ${role==='farmer' ? 'border-green-600 bg-green-50 text-green-700' : 'border-gray-200 text-gray-500'}`}>{t('role_farmer')}</button>
+              <button type="button" onClick={()=>setRole('buyer')} className={`flex-1 py-3 rounded-xl border-2 font-bold ${role==='buyer' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500'}`}>{t('role_buyer')}</button>
+            </div>
+            <input type="tel" required placeholder="Enter Mobile Number" value={phone} onChange={e=>setPhone(e.target.value)} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-lg outline-none focus:ring-2 focus:ring-green-500" />
+            <button type="submit" className="w-full py-4 bg-green-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-green-200">{t('send_otp')}</button>
+          </form>
+        ) : (
+          <form onSubmit={e => { e.preventDefault(); if(otp==='1234') { setUser({ phone, role }); setPage('ask'); } else alert("Try 1234"); }} className="space-y-4">
+            <p className="text-center text-sm text-green-600 font-medium">{t('mock_otp_msg')}</p>
+            <input type="text" required placeholder="OTP" value={otp} onChange={e=>setOtp(e.target.value)} maxLength="4" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-center text-2xl tracking-widest font-bold outline-none focus:ring-2 focus:ring-green-500" />
+            <button type="submit" className="w-full py-4 bg-green-600 text-white rounded-xl font-bold text-lg shadow-lg">{t('verify_otp')}</button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Dashboard({ t, role }) {
+  return (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100 shadow-sm flex items-center justify-between">
+        <div><h3 className="text-blue-900 font-bold text-xl flex items-center gap-2"><CloudRain className="w-6 h-6"/> Today's Weather</h3><p className="text-blue-700 mt-1 font-medium">24°C, Cloudy. 70% chance of rain.</p></div>
+        <Sun className="w-16 h-16 text-yellow-500 drop-shadow-md" />
+      </div>
+      <div className="bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-2xl"><p className="text-orange-900 font-bold flex items-start gap-3"><AlertTriangle className="w-6 h-6 flex-shrink-0" /><span>{t('weather_alert')}</span></p></div>
+      {role === 'farmer' && <div className="bg-green-50 border-l-4 border-green-500 p-5 rounded-r-2xl"><p className="text-green-900 font-bold flex items-start gap-3"><Leaf className="w-6 h-6 flex-shrink-0" /><span>{t('price_high')}</span></p></div>}
+    </div>
+  );
+}
+
+function Orders({ t, orders, setOrders, role }) {
+  const handleDeliver = (orderId) => setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'delivered' } : o));
+  if(orders.length === 0) return <div className="text-center text-gray-500 py-10 font-medium">No active orders.</div>;
+  return (
+    <div className="space-y-4">
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl mb-6 flex gap-2 font-bold text-blue-800"><ShieldCheck /> {t('escrow_msg')}</div>
+      {orders.map(o => (
+        <div key={o.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-start mb-4">
+            <div><span className="text-xs font-bold text-gray-400">ORDER {o.id}</span><h3 className="font-bold text-lg text-gray-800">{o.cropName} (100 kg)</h3></div>
+            <span className="text-xl font-black text-green-600">₹{o.total}</span>
+          </div>
+          <div className="relative pt-4 pb-2">
+            <div className="h-2 bg-gray-100 rounded-full w-full absolute top-6"></div>
+            <div className={`h-2 bg-green-500 rounded-full absolute top-6 transition-all duration-500 ${o.status === 'delivered' ? 'w-full' : 'w-1/2'}`}></div>
+            <div className="flex justify-between relative z-10 mt-1">
+              <div className="flex flex-col items-center"><div className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center mb-1"><CheckCircle size={14}/></div><span className="text-xs font-bold text-green-700">{t('status_ordered')}</span></div>
+              <div className="flex flex-col items-center"><div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${o.status === 'delivered' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}`}>{o.status === 'delivered' && <CheckCircle size={14}/>}</div><span className={`text-xs font-bold ${o.status === 'delivered' ? 'text-green-700' : 'text-gray-400'}`}>{t('status_delivered')}</span></div>
+            </div>
+          </div>
+          {o.status === 'ordered' && role === 'buyer' && <button onClick={() => handleDeliver(o.id)} className="w-full mt-6 py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-md">{t('confirm_delivery')}</button>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LearningHub({ t }) {
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-black text-gray-800 mb-6">{t('learning_hub')}</h2>
+      <div className="grid gap-4">
+        {LEARNING_CONTENT.map(item => (
+          <div key={item.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer hover:border-green-300">
+            <div className="flex items-center gap-4"><div className="p-3 bg-gray-50 rounded-xl">{item.icon}</div><div><h3 className="font-bold text-gray-800 text-lg">{item.title}</h3><span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{item.type}</span></div></div><ChevronRight className="text-gray-300" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function NavItem({ icon, label, active, onClick }) { return <button onClick={onClick} className={`flex flex-col items-center p-2 rounded-lg min-w-[64px] ${active ? 'text-green-600' : 'text-gray-500 hover:text-green-500'}`}>{React.cloneElement(icon, { size: 24, className: active ? 'fill-green-100' : '' })}<span className="text-[10px] mt-1 font-bold">{label}</span></button>; }
+function SidebarItem({ icon, label, active, onClick }) { return <button onClick={onClick} className={`flex items-center gap-3 w-full p-4 rounded-xl transition-colors font-medium text-lg ${active ? 'bg-green-700 text-white font-bold' : 'text-green-100 hover:bg-green-700/50'}`}>{icon} <span>{label}</span></button>; }
