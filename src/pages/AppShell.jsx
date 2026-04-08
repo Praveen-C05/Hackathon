@@ -4,7 +4,7 @@ import {
   Leaf, Home, ShoppingCart, Truck, Tractor,
   MessageCircle, BookOpen, LogOut, Languages,
 } from 'lucide-react';
-import { i18n, INITIAL_CROPS, INITIAL_EQUIPMENT, callGeminiAI } from '../constants.js';
+import { i18n, INITIAL_CROPS, INITIAL_EQUIPMENT, callGrokAI } from '../constants.js';
 
 // Inner pages
 import Dashboard    from './inner/Dashboard.jsx';
@@ -153,14 +153,14 @@ export default function AppShell({ user, setUser, lang, setLang }) {
             {user.role === 'farmer' ? '👨‍🌾' : '🛒'}
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ color: 'white', fontWeight: 600, fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              +91 {user.phone}
+            <div style={{ color: 'white', fontWeight: 600, fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {user.name}
             </div>
             <div style={{
               fontSize: '11px', fontWeight: 600, textTransform: 'uppercase',
               color: user.role === 'farmer' ? '#4ade80' : '#60a5fa',
             }}>
-              {user.role}
+              {user.role === 'farmer' ? 'Farmer' : 'Buyer'}
             </div>
           </div>
         </div>
@@ -294,11 +294,11 @@ export default function AppShell({ user, setUser, lang, setLang }) {
         {/* Page content */}
         <main style={{ flex: 1, padding: '24px', maxWidth: '1000px', width: '100%', margin: '0 auto', paddingBottom: '80px' }}>
           <Routes>
-            <Route index                element={<Dashboard  t={t} role={user.role} />} />
+            <Route index                element={<Dashboard  t={t} user={user} />} />
             <Route path="market"        element={<Marketplace t={t} crops={crops} setCrops={setCrops} role={user.role} addOrder={o => setOrders([o, ...orders])} tab={marketTab} setTab={setMarketTab} />} />
             <Route path="orders"        element={<Orders     t={t} orders={orders} setOrders={setOrders} role={user.role} />} />
             <Route path="equip"         element={<Equipment  t={t} equipment={equipment} setEquipment={setEquipment} tab={equipTab} setTab={setEquipTab} />} />
-            <Route path="ask"           element={<ActionBot  t={t} lang={lang} callAI={callGeminiAI} goTo={goTo} setMarketTab={setMarketTab} setEquipTab={setEquipTab} />} />
+            <Route path="ask"           element={<ActionBot  t={t} lang={lang} callAI={callGrokAI} goTo={goTo} setMarketTab={setMarketTab} setEquipTab={setEquipTab} />} />
             <Route path="learn"         element={<LearningHub t={t} />} />
             <Route path="*"             element={<Navigate to="/app" replace />} />
           </Routes>
