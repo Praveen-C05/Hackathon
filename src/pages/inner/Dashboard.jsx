@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CloudRain, Sun, AlertTriangle, Leaf, TrendingUp, ShoppingCart, Truck } from 'lucide-react';
 
 function StatCard({ icon, label, value, color, bg }) {
@@ -27,7 +27,37 @@ function StatCard({ icon, label, value, color, bg }) {
   );
 }
 
-export default function Dashboard({ t, role }) {
+export default function Dashboard({ t, user }) {
+  const [weather, setWeather] = useState({ temp: '--', condition: 'Fetching...', icon: null, location: 'Your Farm' });
+
+  useEffect(() => {
+    const fetchWeather = async (lat, lon, place) => {
+      try {
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=918b38027c9f9b46343f81ae4d9c7416&units=metric`);
+        const data = await res.json();
+        if (data.main) {
+          setWeather({
+            temp: Math.round(data.main.temp),
+            condition: data.weather[0].main,
+            icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`,
+            location: data.name || place
+          });
+        }
+      } catch (e) {
+        console.error('Weather error:', e);
+      }
+    };
+
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        pos => fetchWeather(pos.coords.latitude, pos.coords.longitude, 'Your Location'),
+        err => fetchWeather(28.6139, 77.2090, 'Delhi, IN')
+      );
+    } else {
+      fetchWeather(28.6139, 77.2090, 'Delhi, IN');
+    }
+  }, []);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
@@ -48,14 +78,14 @@ export default function Dashboard({ t, role }) {
             fontFamily: 'Outfit, sans-serif', fontSize: '22px', fontWeight: 800,
             color: 'white', marginBottom: '6px',
           }}>
-            Good morning! 👋
+            Good morning, {user.name}! 👋
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>
             Here's what's happening on your farm today.
           </p>
         </div>
         <div style={{ fontSize: '56px', flexShrink: 0 }} className="hide-mobile">
-          {role === 'farmer' ? '🌾' : '🛒'}
+          {user.role === 'farmer' ? '🌾' : '🛒'}
         </div>
       </div>
 
@@ -76,12 +106,16 @@ export default function Dashboard({ t, role }) {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
             <CloudRain size={18} color="#2563eb" />
-            <span style={{ fontWeight: 700, fontSize: '16px', color: '#1e40af' }}>Today's Weather</span>
+            <span style={{ fontWeight: 700, fontSize: '16px', color: '#1e40af' }}>{weather.location} Weather</span>
           </div>
-          <p style={{ color: '#3b82f6', fontSize: '28px', fontWeight: 800, fontFamily: 'Outfit, sans-serif' }}>24°C</p>
-          <p style={{ color: '#60a5fa', fontSize: '14px', marginTop: '4px' }}>Cloudy · 70% chance of rain tomorrow</p>
+          <p style={{ color: '#3b82f6', fontSize: '28px', fontWeight: 800, fontFamily: 'Outfit, sans-serif' }}>{weather.temp}°C</p>
+          <p style={{ color: '#60a5fa', fontSize: '14px', marginTop: '4px', textTransform: 'capitalize' }}>{weather.condition} · Stay prepared.</p>
         </div>
-        <Sun size={64} color="#fbbf24" style={{ flexShrink: 0, opacity: 0.8 }} />
+        {weather.icon ? (
+          <img src={weather.icon} alt="weather" style={{ width: 80, height: 80, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }} />
+        ) : (
+          <Sun size={64} color="#fbbf24" style={{ flexShrink: 0, opacity: 0.8 }} />
+        )}
       </div>
 
       {/* Alert */}
@@ -96,7 +130,7 @@ export default function Dashboard({ t, role }) {
       </div>
 
       {/* Price tip */}
-      {role === 'farmer' && (
+      {user.role === 'farmer' && (
         <div style={{
           background: '#f0fdf4', border: '1px solid #bbf7d0',
           borderLeft: '4px solid #22c55e',
@@ -115,7 +149,7 @@ export default function Dashboard({ t, role }) {
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
           {[
-            { label: role === 'farmer' ? 'Sell Crop' : 'Browse Crops', emoji: '📤', color: '#16a34a' },
+            { label: user.role === 'farmer' ? 'Sell Crop' : 'Browse Crops', emoji: '📤', color: '#16a34a' },
             { label: 'Check Orders',  emoji: '📦', color: '#2563eb' },
             { label: 'Rent Equipment', emoji: '🚜', color: '#d97706' },
             { label: 'Ask AI',       emoji: '🤖', color: '#7c3aed' },
